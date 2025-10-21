@@ -37,6 +37,9 @@ This project demonstrates a **complete data engineering and analytics pipeline**
 
 It replicates a **real-world Netflix data workflow**, showcasing how to move, transform, test, and document data efficiently using modern data stack principles.
 
+**Medium Article:**  
+[Building an End-to-End Data Pipeline with dbt, Snowflake & AWS — The Netflix Data Analysis Project](https://medium.com/@codegnerdev/building-an-end-to-end-data-pipeline-with-dbt-snowflake-aws-the-netflix-data-analysis-project-bc26c1825e52)
+
 ---
 
 ## 🧱 Architecture Diagram
