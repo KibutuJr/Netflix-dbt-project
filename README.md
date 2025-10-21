@@ -193,8 +193,8 @@ dbt docs generate
 dbt docs serve
 ```
 
-![dbt Serve](images/dbt_serve.PNG)
 ![dbt Docs](images/dbt_docs.PNG)
+![dbt Serve](images/dbt_serve.PNG)
 
 ---
 
