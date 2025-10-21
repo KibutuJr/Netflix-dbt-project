@@ -1,123 +1,144 @@
-# 🎬 Netflix Data Analysis — End-to-End Data Engineering Project with DBT, Snowflake & AWS
+# 🎬 Netflix Data Analysis End-to-End Project (AWS S3 → Snowflake → dbt)
 
-![Netflix Data Analysis Overview](images/analysis.png)
+![AWS to Snowflake](images/AWS_to_Snowflake.PNG)
 
----
-
-## 🧭 Project Overview
-
-Welcome to the **Netflix Data Analysis DBT Project** — an end-to-end **data engineering and analytics pipeline** built using **AWS S3**, **Snowflake**, and **DBT (Data Build Tool)**.
-
-This project simulates a **modern data stack** setup:
-- 📁 **Raw CSV data** stored in **AWS S3**
-- ❄️ **Snowflake** for staging, schema creation, and transformation
-- 🧱 **DBT** for modular data transformation, testing, and documentation
-- 📊 **Final visualizations** built from the **Gold layer**
-
-The goal is to derive insights about **movie performance, user engagement, and tag relevance** on Netflix — transforming raw data into clean, analytics-ready datasets.
+![Status](https://img.shields.io/badge/Status-Active-success)
+![DBT](https://img.shields.io/badge/Tool-dbt-FF694B?logo=dbt&logoColor=white)
+![Snowflake](https://img.shields.io/badge/Data%20Warehouse-Snowflake-29B5E8?logo=snowflake&logoColor=white)
+![AWS](https://img.shields.io/badge/Storage-AWS%20S3-FF9900?logo=amazon-aws&logoColor=white)
+![Python](https://img.shields.io/badge/Language-Python-blue?logo=python)
+![SQL](https://img.shields.io/badge/Language-SQL-lightgrey?logo=sqlite)
 
 ---
 
-## 🏗️ Architecture & Workflow
-
-![AWS to Snowflake Architecture](images/AWS_to_Snowflake.png)
-
-### Data Flow:
-1. **Source:** Raw CSV files in AWS S3  
-2. **Ingestion:** Loaded into Snowflake using `COPY INTO`  
-3. **Transformation:** Modeled and tested using DBT  
-4. **Analytics:** Visualized through SQL and BI tools  
-5. **Documentation:** Auto-generated with `dbt docs`
+## 📚 Table of Contents
+- [📖 Overview](#-project-overview)
+- [🧱 Architecture](#-architecture-diagram)
+- [🪣 Step 1: Data Ingestion](#-step-1-data-ingestion--aws-s3--snowflake)
+- [🧩 Step 2: Initialize dbt Project](#-step-2-initialize-dbt-project)
+- [🧙‍♂️ Step 3: Staging and Transformations](#-step-3-staging-and-transformations)
+- [🧮 Step 4: Building Fact & Dimension Models](#-step-4-building-fact--dimension-models)
+- [⚙️ Step 5: Incremental Loads & Ephemeral Models](#️-step-5-incremental-loads--ephemeral-models)
+- [🕒 Step 6: Slowly Changing Dimensions (SCD)](#-step-6-slowly-changing-dimensions-scd)
+- [🧠 Step 7: Macros, Seeds & Sources](#-step-7-macros-seeds--sources)
+- [✅ Step 8: Testing & Documentation](#-step-8-testing--documentation)
+- [📊 Step 9: Analysis & Gold Layer](#-step-9-analysis--gold-layer)
+- [🚀 How to Run This Project](#-how-to-run-this-project)
+- [🧭 Project Highlights](#-project-highlights)
+- [🧰 Tools & Technologies](#-tools--technologies)
+- [🧑‍💻 Author & Contact](#-author--contact)
+- [🏁 Conclusion](#-conclusion)
 
 ---
 
-## ⚙️ Snowflake Setup
+## 📖 Project Overview
 
-### 🧍 User, Role & Warehouse Creation
-![Snowflake User Creation](images/snowflake_user_creation.png)
+This project demonstrates a **complete data engineering and analytics pipeline** using **AWS S3**, **Snowflake**, and **dbt (Data Build Tool)** — from **raw CSV ingestion** to **gold-level analytics and visualization-ready models**.
 
-### 🪣 Load Data from AWS S3
+It replicates a **real-world Netflix data workflow**, showcasing how to move, transform, test, and document data efficiently using modern data stack principles.
+
+---
+
+## 🧱 Architecture Diagram
+
+![Snowflake User Creation](images/snowflake_user_creation.PNG)
+![src_table](images/src_table.PNG)
+![raw_movies_table](images/raw_movies_table.PNG)
+![insert](images/insert.PNG)
+![views_on_snowflake](images/views_on_snowflake.PNG)
+
+---
+
+## 🪣 Step 1: Data Ingestion — AWS S3 → Snowflake
+
+The raw Netflix data (CSV files) is stored in **AWS S3**.  
+A **Snowflake stage** is created to connect and load this data using the `COPY INTO` command.
+
 ```sql
-COPY INTO raw.movies
-FROM @aws_s3_stage
-FILE_FORMAT = (TYPE = 'CSV' FIELD_OPTIONALLY_ENCLOSED_BY='"' SKIP_HEADER=1);
+COPY INTO raw.netflix_data
+FROM @aws_stage/netflix_data/
+FILE_FORMAT = (TYPE = CSV FIELD_OPTIONALLY_ENCLOSED_BY='"' SKIP_HEADER = 1);
 ````
 
-![Raw Movies Table](images/raw_movies_table.png)
+### ✅ Steps:
+
+* Create **Snowflake user** and **warehouse**
+* Define **stages** to pull data from AWS
+* Load data using **Snowflake COPY command**
+
+![AWS to Snowflake](images/AWS_to_Snowflake.PNG)
 
 ---
 
-## 🧱 DBT Project Setup
+## 🧩 Step 2: Initialize dbt Project
 
-### ⚡ Initialize DBT
+![dbt Init Netflix](images/dbt_init_netflix.PNG)
+
+We initialize a new dbt project for Netflix using:
 
 ```bash
 dbt init netflix_project
 ```
 
-![DBT Initialization](images/dbt_init_netflix.png)
+Then configure connections to **Snowflake** via the `profiles.yml`.
 
-Once initialized:
+### Key Folders:
 
-* Configure **profiles.yml** for Snowflake connection
-* Create model folders: `staging/`, `intermediate/`, `gold/`
-* Define sources, tests, and macros
+* `models/` → Transformations
+* `seeds/` → Static data
+* `snapshots/` → Change tracking
+* `macros/` → Reusable SQL logic
 
 ---
 
-## 🧩 Staging Layer (Bronze → Silver)
+## 🧙‍♂️ Step 3: Staging and Transformations
 
-![Source Table Definition](images/src_table.png)
-
-The **staging models**:
-
-* Clean and standardize raw data
-* Handle data type casting
-* Remove duplicates and invalid entries
-* Output **views** (no physical tables yet)
+All raw data is **staged** into clean, standardized tables using dbt models.
 
 ```bash
 dbt run
 ```
 
-![DBT Views](images/views_on_dbt.png)
-![Views on Snowflake](images/views_on_snowflake.png)
+This creates **views** in Snowflake (logical transformations).
+Views don’t store data — they simply reference SQL queries dynamically.
+
+![Views on dbt](images/views_on_dbt.PNG)
+![views](images/views.PNG)
 
 ---
 
-## 🧮 Intermediate & Gold Layers
+## 🧮 Step 4: Building Fact & Dimension Models
 
-This is where business transformations happen:
+We move from staging to **data modeling**.
+Instead of using the raw schema, we now use the **DEV schema**.
 
-* **Dimension tables:** Movies, Users, Genres
-* **Fact tables:** Ratings, Engagement, Trends
-* Materialized as **tables** in the **dev schema**
+### Models:
 
-![Views](images/views.png)
+* **Dimension Tables:** e.g., `dim_users`, `dim_movies`
+* **Fact Table:** `fct_ratings` (stores incremental logic)
+
+![Lineage Graph](images/Lineage_Graph.PNG)
 
 ---
 
-## 🔁 Incremental Models
+## ⚙️ Step 5: Incremental Loads & Ephemeral Models
 
-Used to improve performance and scalability.
-Example: `fct_ratings.sql` loads only new or changed data.
+For large datasets, we use **incremental materialization** in dbt.
+This ensures only new or updated records are processed.
 
 ```sql
 {{ config(materialized='incremental', unique_key='rating_id') }}
 ```
 
+Ephemeral models are used for temporary computations that run in memory.
+
+![fct\_ratings](images/test.PNG)
+
 ---
 
-## 🧬 Slowly Changing Dimensions (SCD)
+## 🕒 Step 6: Slowly Changing Dimensions (SCD)
 
-To preserve history, this project implements:
-
-* **SCD Type 1:** Overwrites data
-* **SCD Type 2:** Tracks changes with versioning
-* **SCD Type 3 & 6:** Combine multiple change-tracking methods
-
-![Snapshots](images/snapshots.png)
-![Snapshot Key Example](images/snaptag.png)
+We implement **SCD1**, **SCD2**, and **SCD3/6** to handle data changes over time.
 
 Example surrogate key:
 
@@ -125,150 +146,189 @@ Example surrogate key:
 {{ dbt_utils.generate_surrogate_key(['user_id','movie_id','tag']) }} AS row_key
 ```
 
+![snapshots](images/snapshots.PNG)
+![snaptag](images/snaptag.PNG)
+
 ---
 
-## 🌱 Seeds
+## 🧠 Step 7: Macros, Seeds & Sources
 
-DBT seeds store small static datasets used during transformations.
+### 🪄 Macros
+
+Reusable SQL snippets that simplify testing and transformation logic.
+
+![macros](images/macros.PNG)
+
+### 🌱 Seeds
+
+Static reference datasets are loaded using:
 
 ```bash
 dbt seed
 ```
 
-![Seed Insert Example](images/insert.png)
+### 📄 Sources
+
+Defined in `sources.yml` to track data lineage.
 
 ---
 
-## 🧠 Macros
+## ✅ Step 8: Testing & Documentation
 
-Macros are reusable SQL snippets that simplify complex queries.
+We use both **schema** and **singular** tests to validate data integrity.
 
-![DBT Macros Example](images/macros.png)
-
----
-
-## 🧪 Testing & Documentation
-
-Testing ensures **data quality** with schema and custom SQL tests.
-
-Example test:
-
-```sql
-SELECT * FROM {{ ref('fct_ratings') }}
-WHERE relevance_score <= 0
+```bash
+dbt test
 ```
 
-![DBT Test Results](images/test.png)
+![test](images/test.PNG)
 
-### Generate Documentation
+For documentation:
 
 ```bash
 dbt docs generate
 dbt docs serve
 ```
 
-![DBT Docs](images/dbt_docs.png)
-![DBT Serve UI](images/dbt_serve.png)
-![Lineage Graph](images/Lineage_Graph.png)
+![dbt Serve](images/dbt_serve.PNG)
+![dbt Docs](images/dybt_docs.PNG)
 
 ---
 
-## 📊 Analytical Models (Gold Layer)
+## 📊 Step 9: Analysis & Gold Layer
 
-Located in `models/gold/`:
+The **Gold Layer** delivers business-ready analytics and insights.
 
-* `movie_analysis.sql`
-* `genre_ratings.sql`
-* `user_engagement.sql`
-* `release_trends.sql`
-* `tag_relevance.sql`
-* `top10_by_genre.sql`
-* `monthly_trends.sql`
+![analysis](images/analysis.PNG)
 
-These create aggregated tables for business analysis and dashboards.
+### Analyses Include:
 
----
+* 🎞️ Movies with ≥100 Ratings
+* 🎭 Genre Rating Distribution
+* 👥 User Engagement
+* 📈 Movie Release Trends
+* 🏷️ Tag Relevance
+* 🏆 Top 10 Movies by Genre
+* 📅 Monthly Rating Trends
 
-## 📈 Visualization & Insights
-
-### 🎬 1. Movie Title vs Average Ratings
-
-![Title vs Average Ratings](images/title_vs_av_rating.png)
-
-### ⭐ 2. Movie Title vs Total Ratings
-
-![Title vs Total Ratings](images/title_vs_tot_rating.png)
-
-### 🏷️ 3. Tag Relevance Test
-
-![Relevance Score Test](images/relevant_score_test.png)
-
----
-
-## 🧾 Analytical Highlights
-
-| Category               | Description                             |
-| ---------------------- | --------------------------------------- |
-| 🎥 **Movie Analysis**  | Focuses on movies with ≥100 ratings     |
-| ⭐ **Genre Ratings**    | Shows rating distributions by genre     |
-| 👥 **User Engagement** | Analyzes number of ratings per user     |
-| 🕒 **Release Trends**  | Trends in movie releases and popularity |
-| 🏷️ **Tag Relevance**  | Tag importance and frequency analysis   |
-| 📈 **Top 10 by Genre** | Best-performing titles per genre        |
-| 📆 **Monthly Trends**  | Seasonal and monthly viewing patterns   |
-
----
-
-## 💡 Key Learnings
-
-✅ Built an end-to-end **data pipeline** from AWS → Snowflake → DBT
-✅ Implemented **incremental models** and **ephemeral logic**
-✅ Designed **Slowly Changing Dimensions (SCD 1–6)**
-✅ Developed **automated data tests** and **macros**
-✅ Generated **data documentation** and lineage graphs
-✅ Delivered **actionable insights** via analytics-ready tables
-
----
-
-## 🧰 Tech Stack
-
-| Tool                                | Purpose                           |
-| ----------------------------------- | --------------------------------- |
-| 🪣 **AWS S3**                       | Data lake for raw CSV storage     |
-| ❄️ **Snowflake**                    | Cloud data warehouse              |
-| 🧱 **DBT**                          | Data transformation and testing   |
-| 🐍 **Python**                       | Script automation and ETL support |
-| 🧾 **SQL**                          | Core transformation logic         |
-| 📊 **Power BI / SQL Visualization** | Insight generation and reporting  |
-
----
-
-## 🚀 Conclusion
-
-This project demonstrates a **production-ready data pipeline** that converts raw streaming data into actionable business insights.
-
-It highlights how **DBT brings modularity, testing, and documentation** to modern data workflows — empowering analytics teams to move faster with confidence.
-
-![Final DBT Overview](images/views_on_dbt.png)
-
----
-
-## 👨‍💻 Author
-
-**Fred Kibutu**
-*Data Engineer • Data Analyst • Web Developer*
-
-> 🚀 Building intelligent pipelines that turn raw data into business gold.
-
-📫 **Connect With Me:**
-
-* 🌐 Portfolio: [https://kibutujr.github.io](https://kibutujr.github.io)
-* 💼 LinkedIn: [https://www.linkedin.com/in/fredkibutu](https://www.linkedin.com/in/fredkibutu)
-* 📧 Email: [fredkibutu@gmail.com](mailto:fredkibutu@gmail.com)
-
----
+**Files in `models/gold/`:**
 
 ```
+movie_analysis.sql
+genre_ratings.sql
+user_engagement.sql
+release_trends.sql
+tag_relevance.sql
+top10_by_genre.sql
+monthly_trends.sql
+```
 
-Would you like me to add **GitHub badges** (for Python, DBT, Snowflake, AWS, License, etc.) at the top to make it look even more polished like a professional open-source repo?
+![title\_vs\_av\_rating](images/title_vs_av_rating.PNG)
+![title\_vs\_tot\_rating](images/title_vs_tot_rating.PNG)
+![relevant\_score\_test](images/relevant_score_test.PNG)
+
+---
+
+## 🚀 How to Run This Project
+
+Follow these steps to replicate this project locally or in your own environment.
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/KibutuJr/Netflix-dbt-project.git
+cd Netflix-dbt-project
+```
+
+### 2️⃣ Set Up Virtual Environment (Optional but Recommended)
+
+```bash
+python -m venv venv
+source venv/bin/activate      # (Mac/Linux)
+venv\Scripts\activate         # (Windows)
+```
+
+### 3️⃣ Install dbt and Dependencies
+
+```bash
+pip install dbt-snowflake dbt-core
+```
+
+### 4️⃣ Configure dbt Profile
+
+Update your `profiles.yml` file with your **Snowflake credentials**:
+
+```yaml
+netflix_project:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: <your_account>
+      user: <your_username>
+      password: <your_password>
+      role: <your_role>
+      database: MOVIELENS
+      warehouse: COMPUTE_WH
+      schema: DEV
+```
+
+### 5️⃣ Run dbt Commands
+
+```bash
+dbt debug             # Test connection
+dbt seed              # Load seed files
+dbt run               # Execute models
+dbt test              # Validate data
+dbt docs generate     # Generate documentation
+dbt docs serve        # Open docs locally
+```
+
+### 6️⃣ Verify in Snowflake
+
+Check the **DEV schema** to view your staged, transformed, and gold-layer tables.
+
+---
+
+## 🧭 Project Highlights
+
+* **End-to-End Data Flow:** AWS S3 → Snowflake → dbt
+* **Modern Data Stack:** Modular, scalable, cloud-native
+* **Incremental Models:** Optimized performance
+* **Snapshots & SCDs:** Full data versioning
+* **Automated Testing & Docs:** dbt-native QA
+* **Ad-hoc Analysis:** Gold-layer insights
+
+---
+
+## 🧰 Tools & Technologies
+
+| Tool          | Purpose                        |
+| ------------- | ------------------------------ |
+| **AWS S3**    | Raw data storage               |
+| **Snowflake** | Cloud data warehouse           |
+| **dbt**       | Data modeling & transformation |
+| **SQL**       | Querying & transformations     |
+| **Python**    | Data prep and automation       |
+
+---
+
+## 🧑‍💻 Author & Contact
+
+👤 **Fred Kibutu**
+🌐 [Portfolio](https://kibutujr.vercel.app/)
+💼 [LinkedIn](https://www.linkedin.com/in/fred-kibutu/)
+📧 [Email](mailto:kibutujr@gmail.com)
+
+---
+
+## 🏁 Conclusion
+
+This project showcases a **real-world dbt-driven Netflix data pipeline**, transforming raw datasets into actionable insights.
+It reflects how modern data teams use **dbt, Snowflake, and AWS** to power analytics at scale — from **data ingestion** to **business-ready metrics**.
+
+---
+
+✨ *"Data isn’t just numbers — it’s the story behind every play, pause, and rating."* 🎥
+
 ```
