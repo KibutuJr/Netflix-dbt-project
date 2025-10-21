@@ -330,5 +330,3 @@ It reflects how modern data teams use **dbt, Snowflake, and AWS** to power analy
 ---
 
 ✨ *"Data isn’t just numbers — it’s the story behind every play, pause, and rating."* 🎥
-
-```
