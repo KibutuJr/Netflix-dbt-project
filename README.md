@@ -194,7 +194,7 @@ dbt docs serve
 ```
 
 ![dbt Serve](images/dbt_serve.PNG)
-![dbt Docs](images/dybt_docs.PNG)
+![dbt Docs](images/dbt_docs.PNG)
 
 ---
 
